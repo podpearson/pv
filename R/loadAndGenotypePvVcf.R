@@ -9,26 +9,19 @@
 
 loadAndGenotypePvVcf <- function(
   originalVcfFilename         = "data/genotypes/pv_02.vcf.gz",
-  typableVcf                  = sub("\\.vcf\\.gz", "\\.typable\\.vcf", originalVcfFilename),
-#  rdaFilename                 = sub("\\.gz", "\\.cleanedAndGenotyped\\.vcf\\.rda", originalVcfFilename),
+  typableVcfFilename          = sub("\\.vcf\\.gz", "\\.typable\\.vcf", originalVcfFilename),
   typableRdaFilename          = paste(typableVcf, "rda", sep="."),
-  reload                      = TRUE
+  reload                      = FALSE
 ) {
   if(!reload && file.exists(typableRdaFilename)) {
     load(typableRdaFilename)
   } else {
-#    if(!reload && file.exists(rdaFilename)) {
-#      load(rdaFilename)
-#    } else {
-    if(reload || !file.exists(typableVcf)) {
-      cleanVcfCommand <- paste("zcat", originalVcfFilename, "| scripts/perl/cleanAndGenotypeMagnusVcf.pl >", typableVcf)
+    if(reload || !file.exists(typableVcfFilename)) {
+      cleanVcfCommand <- paste("zcat", originalVcfFilename, "| scripts/perl/cleanAndGenotypeMagnusVcf.pl >", typableVcfFilename)
       system(cleanVcfCommand)
     }
-    typableVcf <- readVcf(typableVcf, genome="P. vivax reference, PlasmoDB V6.0")
+    typableVcf <- readVcf(typableVcfFilename, genome="P. vivax reference, PlasmoDB V6.0")
     save(typableVcf, file=typableRdaFilename)
-#    }
-#    typableVcf <- vcf[values(info(vcf))[["TYP"]]==TRUE]
-#    save(typableVcf, file=typableRdaFilename)
   }
   return(typableVcf)
 }
