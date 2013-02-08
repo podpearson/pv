@@ -15,6 +15,10 @@ sampleSummaries <- function(
   width                       = 10
 ) {
   require(ggplot2)
+  if(!file.exists(dirname(pdfFilestem))) {
+    dir.create(dirname(pdfFilestem), recursive=TRUE)
+  }
+
   typableGT <- geno(vcf)[["GT"]]
 
   if("missingness" %in% variableNames) {
@@ -34,16 +38,50 @@ sampleSummaries <- function(
     dev.off()
   }
 
-  if("missingness" %in% variableNames) {
+  if("heterozgosity" %in% variableNames) {
     typableHetGT <- matrix(typableGT=="0/1", ncol=ncol(typableGT))
     heterozygosityPerSample <- colSums(typableHetGT)/dim(typableGT)[1]
-    pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
+    pdf(paste(pdfFilestem, "heterozgosity", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
         heterozygosityPerSample,
         binwidth=0.05,
         main="Heterozygosity per sample",
         xlab="Heterozygosity",
+        ylab="Frequency (number of samples)"
+      )
+      + theme_bw()
+    )
+    dev.off()
+  }
+  
+  if("singletons" %in% variableNames) {
+    typableHomAltGT <- matrix(typableGT=="1/1", ncol=ncol(typableGT))
+    singletonGT <- typableHomAltGT[values(info(vcf))[["singleton"]]==TRUE, ]
+    singletonsPerSample <- colSums(singletonGT)
+    pdf(paste(pdfFilestem, "singletons", "pdf", sep="."), height=height, width=width)
+    print(
+      qplot(
+        heterozygosityPerSample,
+        binwidth=0.05,
+        main="Number of singletons per sample",
+        xlab="Number of singletons",
+        ylab="Frequency (number of samples)"
+      )
+      + theme_bw()
+    )
+    dev.off()
+  }
+  
+  if("depth" %in% variableNames) {
+    meanDPperSample <- colMeans(geno(vcf)[["DP"]])
+    pdf(paste(pdfFilestem, "depth", "pdf", sep="."), height=height, width=width)
+    print(
+      qplot(
+        meanDPperSample,
+        binwidth=0.05,
+        main="Mean depth per sample",
+        xlab="Mean depth",
         ylab="Frequency (number of samples)"
       )
       + theme_bw()
