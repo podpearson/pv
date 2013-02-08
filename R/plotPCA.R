@@ -11,7 +11,7 @@ plotPCA <- function(
   vcf                         = loadAndGenotypePvVcf(),
   missingnessThreshold        = 0.4,
   calledSamplesThreshold      = 69,
-  pdfFilename                 = "analysis/pca/pca.pdf"
+  pdfFilename                 = "analysis/pca/pv_02.pca.pdf"
 ) {
   require(ggplot2)
   if(!file.exists(dirname(pdfFilename))) {
@@ -43,4 +43,5 @@ plotPCA <- function(
     + scale_colour_brewer(palette="Set1")
   )
   dev.off()
+  return(vcf)
 }

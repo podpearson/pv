@@ -11,7 +11,7 @@ loadAndGenotypePvVcf <- function(
   originalVcfFilename         = "data/genotypes/pv_02.vcf.gz",
   typableVcfFilename          = sub("\\.vcf\\.gz", "\\.typable\\.vcf", originalVcfFilename),
   typableRdaFilename          = paste(typableVcfFilename, "rda", sep="."),
-  typableExtraInfoRdaFilename = paste(typableVcfFilename, "extraInfo", "rda", sep="."),
+  typableExtraInfoRdaFilename = sub("\\.vcf\\.gz", "\\.typable\\.extraInfo\\.vcf\\.rda", originalVcfFilename),
   reload                      = FALSE
 ) {
   if(!reload && file.exists(typableExtraInfoRdaFilename)) {
@@ -27,7 +27,7 @@ loadAndGenotypePvVcf <- function(
       typableVcf <- readVcf(typableVcfFilename, genome="P. vivax reference, PlasmoDB V6.0")
       save(typableVcf, file=typableRdaFilename)
     }
-    typableGT <- geno(vcf)[["GT"]]
+    typableGT <- geno(typableVcf)[["GT"]]
     typableHetGT <- matrix(typableGT=="0/1", ncol=ncol(typableGT))
     typableHomRefGT <- matrix(typableGT=="0/0", ncol=ncol(typableGT))
     typableHomAltGT <- matrix(typableGT=="1/1", ncol=ncol(typableGT))
@@ -71,9 +71,10 @@ loadAndGenotypePvVcf <- function(
           heterozygosity=SNPhet,
           singleton = rowSums(typableHomAltGT)==1 & rowSums(typableHetGT)==0
         )
-      )
+      ),
+      geno=geno(typableVcf)
     )
-    save(typableVcfWithAAFandHet, file="typableExtraInfoRdaFilename")
+    save(typableVcfWithAAFandHet, file=typableExtraInfoRdaFilename)
   }
   return(typableVcfWithAAFandHet)
 }
