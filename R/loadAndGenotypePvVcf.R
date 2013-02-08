@@ -10,7 +10,7 @@
 loadAndGenotypePvVcf <- function(
   originalVcfFilename         = "data/genotypes/pv_02.vcf.gz",
   typableVcfFilename          = sub("\\.vcf\\.gz", "\\.typable\\.vcf", originalVcfFilename),
-  typableRdaFilename          = paste(typableVcf, "rda", sep="."),
+  typableRdaFilename          = paste(typableVcfFilename, "rda", sep="."),
   reload                      = FALSE
 ) {
   if(!reload && file.exists(typableRdaFilename)) {
