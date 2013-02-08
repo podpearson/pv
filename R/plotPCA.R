@@ -14,6 +14,9 @@ plotPCA <- function(
   pdfFilename                 = "analysis/pca/pca.pdf"
 ) {
   require(ggplot2)
+  if(!file.exists(dirname(pdfFilename))) {
+    dir.create(dirname(pdfFilename), recursive=TRUE)
+  }
   
   typableGT <- geno(vcf)[["GT"]]
   typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
