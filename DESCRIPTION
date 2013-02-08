@@ -1,0 +1,13 @@
+Package: pv
+Type: Package
+Title: pv: Analysis of Malariagen Plasmodium vivax data
+Version: 0.0.1
+Date: 2013-02-08
+Author: Richard D. Pearson
+Maintainer: Richard Pearson <rpearson@well.ox.ac.uk>
+Depends: R (>= 2.15.0), VariantAnnotation
+Imports: BiocGenerics, GenomicRanges, IRanges, Biostrings, ggplot2, RColorBrewer, gridExtra
+LazyLoad: yes
+Description: Package to carry out all analysis done by Richard Pearson on MalariaGEN Plasmodium vivax project
+License: LGPL
+URL: http://www.well.ox.ac.uk/~rpearson
