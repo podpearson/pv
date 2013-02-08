@@ -20,8 +20,8 @@ loadAndGenotypePvVcf <- function(
 #    if(!reload && file.exists(rdaFilename)) {
 #      load(rdaFilename)
 #    } else {
-    if(reload || !file.exists(cleanedAndGenotypedVcf)) {
-      cleanVcfCommand <- paste("zcat", originalVcfFilename, "| scripts/perl/cleanAndGenotypeMagnusVcf.pl >", cleanedAndGenotypedVcf)
+    if(reload || !file.exists(typableVcf)) {
+      cleanVcfCommand <- paste("zcat", originalVcfFilename, "| scripts/perl/cleanAndGenotypeMagnusVcf.pl >", typableVcf)
       system(cleanVcfCommand)
     }
     typableVcf <- readVcf(typableVcf, genome="P. vivax reference, PlasmoDB V6.0")
