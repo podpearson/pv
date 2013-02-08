@@ -8,8 +8,9 @@
 
 
 loadAndGenotypePvVcf <- function(
-  vcfFilename                 = "data/genotypes/pv_02.vcf.gz",
-  rdaFilename                 = sub("\\.gz", "\\.rda", vcfFilename),
+  originalVcfFilename         = "data/genotypes/pv_02.vcf.gz",
+  cleanedAndGenotypedVcf      = sub("\\.vcf\\.gz", "\\.cleanedAndGenotyped\\.vcf", vcfFilename),
+  rdaFilename                 = sub("\\.gz", "\\.cleanedAndGenotyped\\.vcf\\.rda", vcfFilename),
   typableRdaFilename          = sub("\\.gz", "\\.typable\\.rda", vcfFilename),
   reload                      = TRUE
 ) {
@@ -19,7 +20,11 @@ loadAndGenotypePvVcf <- function(
     if(!reload && file.exists(rdaFilename)) {
       load(rdaFilename)
     } else {
-      vcf <- readVcf(vcfFilename, genome="P. vivax reference, PlasmoDB V6.0")
+      if(reload || !file.exists(cleanedAndGenotypedVcf)) {
+        cleanVcfCommand <- paste("zcat", originalVcfFilename, "| scripts/perl/cleanAndGenotypeMagnusVcf.pl >", cleanedAndGenotypedVcf)
+        system(cleanVcfCommand)
+      }
+      vcf <- readVcf(cleanedAndGenotypedVcf, genome="P. vivax reference, PlasmoDB V6.0")
       save(vcf, file=rdaFilename)
     }
     typableVcf <- vcf[values(info(vcf))[["TYP"]]==TRUE]
@@ -27,4 +32,3 @@ loadAndGenotypePvVcf <- function(
   }
   return(typableVcf)
 }
-
