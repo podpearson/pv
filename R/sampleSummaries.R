@@ -10,7 +10,7 @@
 sampleSummaries <- function(
   vcf                         = loadAndGenotypePvVcf(),
   variableNames               = c("missingness", "heterozgosity", "singletons", "depth"),
-  pdfFilestem                 = "analysis/sampleSummaries/analysis/pca/pv_02",
+  pdfFilestem                 = "analysis/sampleSummaries/pv_02",
   height                      = 6,
   width                       = 10
 ) {
@@ -45,7 +45,6 @@ sampleSummaries <- function(
     print(
       qplot(
         heterozygosityPerSample,
-        binwidth=0.05,
         main="Heterozygosity per sample",
         xlab="Heterozygosity",
         ylab="Frequency (number of samples)"
@@ -62,8 +61,7 @@ sampleSummaries <- function(
     pdf(paste(pdfFilestem, "singletons", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
-        heterozygosityPerSample,
-        binwidth=0.05,
+        singletonsPerSample,
         main="Number of singletons per sample",
         xlab="Number of singletons",
         ylab="Frequency (number of samples)"
@@ -79,7 +77,6 @@ sampleSummaries <- function(
     print(
       qplot(
         meanDPperSample,
-        binwidth=0.05,
         main="Mean depth per sample",
         xlab="Mean depth",
         ylab="Frequency (number of samples)"

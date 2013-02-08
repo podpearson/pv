@@ -10,19 +10,23 @@
 plotPCA <- function(
   vcf                         = loadAndGenotypePvVcf(),
   missingnessThreshold        = 0.4,
-  calledSamplesThreshold      = 69,
-  pdfFilename                 = "analysis/pca/pv_02.pca.pdf"
+  calledSamplesThreshold      = NULL,
+#  calledSamplesThreshold      = 70,
+  pdfFilestem                 = "analysis/pca/pv_02.pca.pdf"
 ) {
   require(ggplot2)
-  if(!file.exists(dirname(pdfFilename))) {
-    dir.create(dirname(pdfFilename), recursive=TRUE)
+  if(!file.exists(dirname(pdfFilestem))) {
+    dir.create(dirname(pdfFilestem), recursive=TRUE)
   }
   
   typableGT <- geno(vcf)[["GT"]]
   typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
   missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+  if(is.null(calledSamplesThreshold)) {
+    calledSamplesThreshold <- length(which(missingnessPerSample < missingnessThreshold))
+  }
 
-  GTdosagesInAllsamples <- (typableGT=="0/0") * 0.0 + (typableGT=="0/1") * 0.5 + (typableGT=="0/0") * 1.0
+  GTdosagesInAllsamples <- (typableGT=="0/0") * 0.0 + (typableGT=="0/1") * 0.5 + (typableGT=="1/1") * 1.0
   GTdosagesInNonMissingSamplesAndVariants <- GTdosagesInAllsamples[
     values(info(vcf))[["NS"]]>=calledSamplesThreshold,
     missingnessPerSample<missingnessThreshold
@@ -30,13 +34,39 @@ plotPCA <- function(
   pcaResults <- prcomp(t(GTdosagesInNonMissingSamplesAndVariants))
   sampleCountries <- countryCodes(dimnames(vcf)[[2]])
 
-  pdf(pdfFilename, height=6, width=10)
+  pdf(paste(pdfFilestem, "PC1vsPC2", "pdf", sep="."), height=6, width=10)
+  print(
+    qplot(
+      pcaResults[["x"]][, 1],
+      pcaResults[["x"]][, 2],
+      colour=sampleCountries[missingnessPerSample<missingnessThreshold],
+      xlab="PC1",
+      ylab="PC2"
+    )
+    + theme_bw()
+    + scale_colour_brewer(palette="Set1")
+  )
+  dev.off()
+  pdf(paste(pdfFilestem, "PC1vsPC3", "pdf", sep="."), height=6, width=10)
   print(
     qplot(
       pcaResults[["x"]][, 1],
       pcaResults[["x"]][, 3],
-      colour=sampleCountries[missingnessPerSample<0.4],
+      colour=sampleCountries[missingnessPerSample<missingnessThreshold],
       xlab="PC1",
+      ylab="PC3"
+    )
+    + theme_bw()
+    + scale_colour_brewer(palette="Set1")
+  )
+  dev.off()
+  pdf(paste(pdfFilestem, "PC2vsPC3", "pdf", sep="."), height=6, width=10)
+  print(
+    qplot(
+      pcaResults[["x"]][, 2],
+      pcaResults[["x"]][, 3],
+      colour=sampleCountries[missingnessPerSample<missingnessThreshold],
+      xlab="PC2",
       ylab="PC3"
     )
     + theme_bw()
