@@ -1,4 +1,4 @@
-# sampleSummaries.R
+# variantSummaries.R
 # 
 # Package: pv
 # Author: Richard D Pearson
@@ -6,12 +6,14 @@
 #
 ###############################################################################
 
+
 # vcf_01 <- sampleSummaries(loadAndGenotypePvVcf("data/genotypes/out.pv_1.0/annotated.vcf.gz"), pdfFilestem = "analysis/sampleSummaries/pv_01")
 
-sampleSummaries <- function(
+variantSummaries <- function(
   vcf                         = loadAndGenotypePvVcf(),
-  variableNames               = c("missingness", "heterozgosity", "singletons", "depth"),
-  pdfFilestem                 = "analysis/sampleSummaries/pv_02",
+  variableNames               = c("missingness", "heterozgosity", "depth"),
+  infoColumnNames             = names(values(info(vcf))),
+  pdfFilestem                 = "analysis/variantSummaries/pv_02",
   height                      = 6,
   width                       = 10
 ) {
@@ -24,15 +26,15 @@ sampleSummaries <- function(
 
   if("missingness" %in% variableNames) {
     typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
-    missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+    missingnessPerVariant <- rowSums(typableMissingGT)/dim(typableGT)[2]
     pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
-        missingnessPerSample,
+        missingnessPerVariant,
         binwidth=0.05,
-        main="Missingness per sample",
+        main="Missingness per variant",
         xlab="Missingness",
-        ylab="Frequency (number of samples)"
+        ylab="Frequency (number of variants)"
       )
       + theme_bw()
     )
@@ -41,52 +43,52 @@ sampleSummaries <- function(
 
   if("heterozgosity" %in% variableNames) {
     typableHetGT <- matrix(typableGT=="0/1", ncol=ncol(typableGT))
-    heterozygosityPerSample <- colSums(typableHetGT)/dim(typableGT)[1]
+    heterozygosityPerVariant <- rowSums(typableHetGT)/dim(typableGT)[2]
     pdf(paste(pdfFilestem, "heterozgosity", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
-        heterozygosityPerSample,
-        main="Heterozygosity per sample",
+        heterozygosityPerVariant,
+        main="Heterozygosity per variant",
         xlab="Heterozygosity",
-        ylab="Frequency (number of samples)"
+        ylab="Frequency (number of variants)"
       )
       + theme_bw()
     )
     dev.off()
   }
-  
-  if("singletons" %in% variableNames) {
-    typableHomAltGT <- matrix(typableGT=="1/1", ncol=ncol(typableGT))
-    singletonGT <- typableHomAltGT[values(info(vcf))[["singleton"]]==TRUE, ]
-    singletonsPerSample <- colSums(singletonGT)
-    pdf(paste(pdfFilestem, "singletons", "pdf", sep="."), height=height, width=width)
-    print(
-      qplot(
-        singletonsPerSample,
-        main="Number of singletons per sample",
-        xlab="Number of singletons",
-        ylab="Frequency (number of samples)"
-      )
-      + theme_bw()
-    )
-    dev.off()
-  }
-  
+    
   if("depth" %in% variableNames) {
-    meanDPperSample <- colMeans(geno(vcf)[["DP"]])
+    meanDPperVariant <- rowMeans(geno(vcf)[["DP"]])
     pdf(paste(pdfFilestem, "depth", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
-        meanDPperSample,
-        main="Mean depth per sample",
+        meanDPperVariant,
+        main="Mean depth per variant",
         xlab="Mean depth",
-        ylab="Frequency (number of samples)"
+        ylab="Frequency (number of variants)"
       )
       + theme_bw()
     )
     dev.off()
   }
   
+  sapply(
+    infoColumnNames,
+    function(infoColumnName) {
+      pdf(paste(pdfFilestem, infoColumnName, "pdf", sep="."), height=height, width=width)
+      print(
+        qplot(
+          values(info(vcf))[[infoColumnName]],
+          xlab=infoColumnName,
+          ylab="Frequency (number of variants)"
+        )
+        + theme_bw()
+      )
+      dev.off()
+    }
+  )
+  
   return(vcf)
 }
+
 

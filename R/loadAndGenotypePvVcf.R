@@ -74,6 +74,17 @@ loadAndGenotypePvVcf <- function(
       ),
       geno=geno(typableVcf)
     )
+    RefReads <- matrix(
+      sapply(geno(typableVcfWithAAFandHet)[["AD"]], function(x) x[1]),
+      ncol=dim(geno(typableVcfWithAAFandHet)[["AD"]])[2],
+      dimnames=dimnames(geno(typableVcfWithAAFandHet)[["AD"]])
+    )
+    FirstAltReads <- matrix(
+      sapply(geno(typableVcfWithAAFandHet)[["AD"]], function(x) x[2]),
+      ncol=dim(geno(typableVcfWithAAFandHet)[["AD"]])[2],
+      dimnames=dimnames(geno(typableVcfWithAAFandHet)[["AD"]])
+    )
+    geno(typableVcfWithAAFandHet)[["MAF"]] <- pmin(RefReads/(RefReads+FirstAltReads), FirstAltReads/(RefReads+FirstAltReads))
     save(typableVcfWithAAFandHet, file=typableExtraInfoRdaFilename)
   }
   return(typableVcfWithAAFandHet)
