@@ -13,8 +13,12 @@ plotPCA <- function(
   vcf                         = loadAndGenotypePvVcf(),
   missingnessThreshold        = 0.35,
 #  calledSamplesThreshold      = NULL,
-  calledSamplesThresholds     = seq(50, dim(vcf)[2], 2),
-  pdfFilestem                 = "analysis/pca/pv_02"
+#  calledSamplesThresholds     = seq(50, dim(vcf)[2], 2),
+  calledSamplesThresholds     = seq(76, 88, 2),
+  pdfFilestem                 = "analysis/pca/pv_02",
+  pfContaminants              = c("PD0173-C", "PH0309-C", "PJ0002-Cx", "PN0094-C", "PN0095-C", "PN0096-C"),
+#  pvMOI                       = c("")
+  pvMOI                       = NULL
 ) {
   require(ggplot2)
   if(!file.exists(dirname(pdfFilestem))) {
@@ -43,12 +47,17 @@ plotPCA <- function(
         missingnessPerSample<missingnessThreshold
       ]
       pcaResults[[calledSamplesThreshold]] <- prcomp(t(GTdosagesInNonMissingSamplesAndVariants))
+      sampleShapes <- rep("uncontaminated", dim(GTdosagesInNonMissingSamplesAndVariants)[2])
+      names(sampleShapes) <- dimnames(GTdosagesInNonMissingSamplesAndVariants)[[2]]
+      sampleShapes[pfContaminants] <- "Pf contaminated"
+      sampleShapes[pvMOI] <- "Pv MOI"
       pdf(paste(pdfFilestemExtended, "PC1vsPC2", "pdf", sep="."), height=6, width=10)
       print(
         qplot(
           pcaResults[[calledSamplesThreshold]][["x"]][, 1],
           pcaResults[[calledSamplesThreshold]][["x"]][, 2],
           colour=sampleCountries[missingnessPerSample<missingnessThreshold],
+          shape=sampleShapes,
           xlab="PC1",
           ylab="PC2"
         )
@@ -62,6 +71,7 @@ plotPCA <- function(
           pcaResults[[calledSamplesThreshold]][["x"]][, 1],
           pcaResults[[calledSamplesThreshold]][["x"]][, 3],
           colour=sampleCountries[missingnessPerSample<missingnessThreshold],
+          shape=sampleShapes,
           xlab="PC1",
           ylab="PC3"
         )
@@ -75,6 +85,7 @@ plotPCA <- function(
           pcaResults[[calledSamplesThreshold]][["x"]][, 2],
           pcaResults[[calledSamplesThreshold]][["x"]][, 3],
           colour=sampleCountries[missingnessPerSample<missingnessThreshold],
+          shape=sampleShapes,
           xlab="PC2",
           ylab="PC3"
         )

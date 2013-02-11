@@ -11,8 +11,9 @@
 
 variantSummaries <- function(
   vcf                         = loadAndGenotypePvVcf(),
-  variableNames               = c("missingness", "heterozgosity", "depth"),
+  variableNames               = c("missingness", "heterozgosity", "depth", "meanMAF"),
   infoColumnNames             = names(values(info(vcf))),
+  sampleMissingnessThresholds = c(0.35, 0.75, 0.95, 1),
   pdfFilestem                 = "analysis/variantSummaries/pv_02",
   height                      = 6,
   width                       = 10
@@ -26,19 +27,39 @@ variantSummaries <- function(
 
   if("missingness" %in% variableNames) {
     typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
-    missingnessPerVariant <- rowSums(typableMissingGT)/dim(typableGT)[2]
-    pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
-    print(
-      qplot(
-        missingnessPerVariant,
-        binwidth=0.05,
-        main="Missingness per variant",
-        xlab="Missingness",
-        ylab="Frequency (number of variants)"
-      )
-      + theme_bw()
+    missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+    sapply(
+      sampleMissingnessThresholds,
+      function(sampleMissingnessThreshold) {
+        missingnessPerVariant <- rowSums(typableMissingGT[, missingnessPerSample<sampleMissingnessThreshold])
+        missingnessProportionPerVariant <- missingnessPerVariant/length(which(missingnessPerSample<sampleMissingnessThreshold))
+#        missingnessPerVariant <- rowSums(typableMissingGT)/dim(typableGT)[2]
+        pdf(paste(pdfFilestem, "missingness", sampleMissingnessThreshold, "pdf", sep="."), height=height, width=width)
+        print(
+          qplot(
+            missingnessPerVariant,
+            binwidth=1,
+            main=paste("Missingness per variant (samples <", sampleMissingnessThreshold, "missingness)"),
+            xlab="Missingness",
+            ylab="Frequency (number of variants)"
+          )
+          + theme_bw()
+        )
+        dev.off()
+        pdf(paste(pdfFilestem, "proportionMissing", sampleMissingnessThreshold, "pdf", sep="."), height=height, width=width)
+        print(
+          qplot(
+            missingnessProportionPerVariant,
+            binwidth=0.01,
+            main=paste("Proportion missing per variant (samples <", sampleMissingnessThreshold, "missingness)"),
+            xlab="Proportion missing",
+            ylab="Frequency (number of variants)"
+          )
+          + theme_bw()
+        )
+        dev.off()
+      }
     )
-    dev.off()
   }
 
   if("heterozgosity" %in% variableNames) {
@@ -65,6 +86,21 @@ variantSummaries <- function(
         meanDPperVariant,
         main="Mean depth per variant",
         xlab="Mean depth",
+        ylab="Frequency (number of variants)"
+      )
+      + theme_bw()
+    )
+    dev.off()
+  }
+  
+  if("meanMAF" %in% variableNames) {
+    meanMAFperVariant <- rowMeans(geno(vcf)[["MAF"]], na.rm=TRUE)
+    pdf(paste(pdfFilestem, "meanMAF", "pdf", sep="."), height=height, width=width)
+    print(
+      qplot(
+        meanMAFperVariant,
+        main="Mean MAF per variant",
+        xlab="Mean MAF",
         ylab="Frequency (number of variants)"
       )
       + theme_bw()
