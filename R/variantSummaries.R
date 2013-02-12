@@ -28,6 +28,30 @@ variantSummaries <- function(
   if("missingness" %in% variableNames) {
     typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
     missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+    pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
+    print(
+      qplot(
+        missingnessPerVariant,
+        binwidth=1,
+        main=paste("Missingness per variant"),
+        xlab="Missingness",
+        ylab="Frequency (number of variants)"
+      )
+      + theme_bw()
+    )
+    dev.off()
+    pdf(paste(pdfFilestem, "proportionMissing", "pdf", sep="."), height=height, width=width)
+    print(
+      qplot(
+        missingnessProportionPerVariant,
+        binwidth=0.01,
+        main=paste("Proportion missing per variant"),
+        xlab="Proportion missing",
+        ylab="Frequency (number of variants)"
+      )
+      + theme_bw()
+    )
+    dev.off()
     sapply(
       sampleMissingnessThresholds,
       function(sampleMissingnessThreshold) {
