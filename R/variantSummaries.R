@@ -28,6 +28,8 @@ variantSummaries <- function(
   if("missingness" %in% variableNames) {
     typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
     missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+    missingnessPerVariant <- rowSums(typableMissingGT)
+    missingnessProportionPerVariant <- missingnessPerVariant/dim(typableMissingGT)[2]
     pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
     print(
       qplot(

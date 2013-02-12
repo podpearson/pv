@@ -70,7 +70,7 @@ plotPCAandDiscordance <- function(
       missingnessPerVariant <- rowSums(typableMissingGT[, samplesToUse])
       
 #      Create variant summary plots
-      variantSummaries(vcf[, samplesToUse], pdfFilestem=paste("analysis/variantSummaries/", vcfName, ".", parameterSetName, sep=""))
+      variantSummaries(vcf[, samplesToUse], pdfFilestem=paste("analysis/variantSummaries/", vcfName, ".", parameterSetName, sep=""), sampleMissingnessThresholds=NULL, infoColumnNames=NULL)
       
 #      Create PCA plot
     
