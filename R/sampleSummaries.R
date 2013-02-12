@@ -25,6 +25,8 @@ sampleSummaries <- function(
   if("missingness" %in% variableNames) {
     typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT))
     missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
+    missingnessPerSampleDF <- data.frame(sampleID=dimnames(typableGT)[[2]], missingnessPerSample=missingnessPerSample)
+    write.table(missingnessPerSampleDF, file=paste(pdfFilestem, "missingnessPerSample", "txt", sep="."), row.names=FALSE, col.names=TRUE, sep="\t", quote=FALSE)
     pdf(paste(pdfFilestem, "missingness", "pdf", sep="."), height=height, width=width)
     print(
       qplot(
