@@ -16,7 +16,7 @@ plotPCAandDiscordance <- function(
 #  ),
   parameterSets               = list(
     "0.35_0_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=NULL),
-    "0.75_8_all"   = list(sampleMissingnessThreshold = 0.75, variantMissingnessThreshold=10, samplesToRemove=NULL)
+    "0.75_6_all"    = list(sampleMissingnessThreshold = 0.75, variantMissingnessThreshold=6, samplesToRemove=NULL)
 #    "0.95_10_all"   = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=10, samplesToRemove=NULL),
 #    "1.00_20_all"   = list(sampleMissingnessThreshold = 1.00, variantMissingnessThreshold=20, samplesToRemove=NULL),
 #    "0.35_1_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=1,  samplesToRemove=NULL),
@@ -44,6 +44,8 @@ plotPCAandDiscordance <- function(
   GTdosagesInAllsamples <- (typableGT=="0/0") * -1 + (typableGT=="0/1") * 0 + (typableGT=="1/1") * 1
   cat("plotPCAandDiscordance: determining sample countries\n")
   sampleCountries <- countryCodes(dimnames(vcf)[[2]])
+  rm(vcf)
+  gc()
   
   resultsList <- sapply(
     names(parameterSets),
@@ -59,6 +61,40 @@ plotPCAandDiscordance <- function(
       }
       missingnessPerVariant <- rowSums(typableMissingGT[, samplesToUse])
       
+#      Create PCA plot
+    
+      GTdosagesInNonMissingSamplesAndVariants <- GTdosagesInAllsamples[
+        missingnessPerVariant<=parameterSets[[parameterSetName]][["variantMissingnessThreshold"]],
+        samplesToUse
+      ]
+      cat("calculating PCA results\n")
+      pcaResults <- prcomp(t(GTdosagesInNonMissingSamplesAndVariants))
+      sampleShapes <- rep("uncontaminated", dim(GTdosagesInNonMissingSamplesAndVariants)[2])
+      names(sampleShapes) <- dimnames(GTdosagesInNonMissingSamplesAndVariants)[[2]]
+      sampleShapes[names(sampleShapes) %in% pfContaminants] <- "Pf contaminated"
+      sampleShapes[names(sampleShapes) %in% pvMOI] <- "Pv MOI"
+      cat("creating PCA plots\n")
+      lapply(
+        pcsToPlot,
+        function(pcs) {
+          pdf(paste(pdfFilestemExtended, ".PC", pcs[1], "vsPC", pcs[2],".", "pdf", sep=""), height=6, width=10)
+          print(
+            qplot(
+              pcaResults[["x"]][, pcs[1]],
+              pcaResults[["x"]][, pcs[2]],
+              colour=sampleCountries[samplesToUse],
+              shape=sampleShapes,
+              xlab=paste("PC", pcs[1], sep=""),
+              ylab=paste("PC", pcs[2], sep="")
+            )
+            + theme_bw()
+            + scale_colour_brewer(palette="Set1")
+          )
+          dev.off()
+          
+        }
+      )
+      
 #      Create discordance histogram and matrix
       GT <- typableGT[
         missingnessPerVariant<=parameterSets[[parameterSetName]][["variantMissingnessThreshold"]],
@@ -67,6 +103,7 @@ plotPCAandDiscordance <- function(
       GT[GT=="./."] <- NA
       dimnames(GT)[[2]] <- paste(samplesToUse, " (", sampleCountries[samplesToUse], ")", sep="")
       
+      gc()
       cat("calculating discordance matrix\n")
       GTDiscordanceMatrix <- discordanceMatrix(GT)
       
@@ -102,39 +139,6 @@ plotPCAandDiscordance <- function(
       )
       dev.off()
 
-#      Create PCA plot
-    
-      GTdosagesInNonMissingSamplesAndVariants <- GTdosagesInAllsamples[
-        missingnessPerVariant<=parameterSets[[parameterSetName]][["variantMissingnessThreshold"]],
-        samplesToUse
-      ]
-      cat("calculating PCA results\n")
-      pcaResults <- prcomp(t(GTdosagesInNonMissingSamplesAndVariants))
-      sampleShapes <- rep("uncontaminated", dim(GTdosagesInNonMissingSamplesAndVariants)[2])
-      names(sampleShapes) <- dimnames(GTdosagesInNonMissingSamplesAndVariants)[[2]]
-      sampleShapes[names(sampleShapes) %in% pfContaminants] <- "Pf contaminated"
-      sampleShapes[names(sampleShapes) %in% pvMOI] <- "Pv MOI"
-      cat("creating PCA plots\n")
-      lapply(
-        pcsToPlot,
-        function(pcs) {
-          pdf(paste(pdfFilestemExtended, ".PC", pcs[1], "vsPC", pcs[2],".", "pdf", sep=""), height=6, width=10)
-          print(
-            qplot(
-              pcaResults[["x"]][, pcs[1]],
-              pcaResults[["x"]][, pcs[2]],
-              colour=sampleCountries[samplesToUse],
-              shape=sampleShapes,
-              xlab=paste("PC", pcs[1], sep=""),
-              ylab=paste("PC", pcs[2], sep="")
-            )
-            + theme_bw()
-            + scale_colour_brewer(palette="Set1")
-          )
-          dev.off()
-          
-        }
-      )
       return(list(pcaResults=pcaResults, discordanceMatrix=GTDiscordanceMatrix))
     },
     USE.NAMES=TRUE,
