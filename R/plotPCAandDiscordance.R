@@ -15,8 +15,8 @@ plotPCAandDiscordance <- function(
 #    "0.35_0_all" = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0, samplesToRemove=NULL)
 #  ),
   parameterSets               = list(
-#    "0.35_0_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=NULL),
-#    "0.75_10_all"   = list(sampleMissingnessThreshold = 0.75, variantMissingnessThreshold=10, samplesToRemove=NULL),
+    "0.35_0_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=NULL),
+    "0.75_8_all"   = list(sampleMissingnessThreshold = 0.75, variantMissingnessThreshold=10, samplesToRemove=NULL)
 #    "0.95_10_all"   = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=10, samplesToRemove=NULL),
 #    "1.00_20_all"   = list(sampleMissingnessThreshold = 1.00, variantMissingnessThreshold=20, samplesToRemove=NULL),
 #    "0.35_1_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=1,  samplesToRemove=NULL),
@@ -24,7 +24,7 @@ plotPCAandDiscordance <- function(
 #    "0.35_5_all"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=5,  samplesToRemove=NULL),
 #    "0.35_10_all"   = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=10, samplesToRemove=NULL),
 #    "0.35_0_noOutliers"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=c(c("PH0184-C", "PH0190-C", "PH0309-C", "PH0313-C", "PH0315-C", "PH0319-C"), c("PH0189-C", "PH0312-C", "PH0318-C")))
-    "0.35_0_SEA_noOutliers"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=c(c("PH0184-C", "PH0190-C", "PH0309-C", "PH0313-C", "PH0315-C", "PH0319-C"), c("PH0189-C", "PH0312-C", "PH0318-C")), countries=c("Thailand", "Cambodia", "Vietnam"))
+#    "0.35_0_SEA_noOutliers"    = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0,  samplesToRemove=c(c("PH0184-C", "PH0190-C", "PH0309-C", "PH0313-C", "PH0315-C", "PH0319-C"), c("PH0189-C", "PH0312-C", "PH0318-C")), countries=c("Thailand", "Cambodia", "Vietnam"))
   ),
   pdfFilestem                 = "analysis/pca/pv_02",
   pfContaminants              = c("PD0173-C", "PH0309-C", "PJ0002-Cx", "PN0094-C", "PN0095-C", "PN0096-C"),
@@ -37,16 +37,18 @@ plotPCAandDiscordance <- function(
     dir.create(dirname(pdfFilestem), recursive=TRUE)
   }
   
+  cat("plotPCAandDiscordance: preparing data\n")
   typableGT <- geno(vcf)[["GT"]]
   typableMissingGT <- matrix(typableGT=="./.", ncol=ncol(typableGT), dimnames=dimnames(typableGT))
   missingnessPerSample <- colSums(typableMissingGT)/dim(typableGT)[1]
   GTdosagesInAllsamples <- (typableGT=="0/0") * -1 + (typableGT=="0/1") * 0 + (typableGT=="1/1") * 1
+  cat("plotPCAandDiscordance: determining sample countries\n")
   sampleCountries <- countryCodes(dimnames(vcf)[[2]])
   
   resultsList <- sapply(
     names(parameterSets),
     function(parameterSetName) {
-      print(parameterSetName)
+      cat("\n", parameterSetName, "\n----------------------------\n")
       pdfFilestemExtended <- paste(pdfFilestem, parameterSetName, sep=".")
       samplesToUse <- setdiff(
         dimnames(typableMissingGT)[[2]][missingnessPerSample<parameterSets[[parameterSetName]][["sampleMissingnessThreshold"]]],
@@ -63,9 +65,12 @@ plotPCAandDiscordance <- function(
         samplesToUse
       ]
       GT[GT=="./."] <- NA
+      dimnames(GT)[[2]] <- paste(samplesToUse, " (", sampleCountries[samplesToUse], ")", sep="")
       
+      cat("calculating discordance matrix\n")
       GTDiscordanceMatrix <- discordanceMatrix(GT)
       
+      cat("creating discordance plots\n")
       pdf(paste(pdfFilestemExtended, "pairwiseDiscordanceHistogram.pdf", sep="."), height=4, width=6)
       print(
         qplot(
@@ -88,7 +93,7 @@ plotPCAandDiscordance <- function(
           aes(x=Var1, y=Var2, fill=Discordances)
         )
         + geom_tile()
-        + scale_fill_gradient2(low="red", high="blue", midpoint=median(GTsIntDiscordanceMatrix, na.rm=TRUE))
+        + scale_fill_gradient2(low="red", high="blue", midpoint=median(GTDiscordanceMatrix, na.rm=TRUE))
   #      + scale_fill_gradient(low="yellow", high="red")
         + theme_bw()
         + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
@@ -103,11 +108,13 @@ plotPCAandDiscordance <- function(
         missingnessPerVariant<=parameterSets[[parameterSetName]][["variantMissingnessThreshold"]],
         samplesToUse
       ]
+      cat("calculating PCA results\n")
       pcaResults <- prcomp(t(GTdosagesInNonMissingSamplesAndVariants))
       sampleShapes <- rep("uncontaminated", dim(GTdosagesInNonMissingSamplesAndVariants)[2])
       names(sampleShapes) <- dimnames(GTdosagesInNonMissingSamplesAndVariants)[[2]]
       sampleShapes[names(sampleShapes) %in% pfContaminants] <- "Pf contaminated"
       sampleShapes[names(sampleShapes) %in% pvMOI] <- "Pv MOI"
+      cat("creating PCA plots\n")
       lapply(
         pcsToPlot,
         function(pcs) {
@@ -128,7 +135,7 @@ plotPCAandDiscordance <- function(
           
         }
       )
-      return(list(pcaResults=pcaResults, discordanceMatrix=discordanceMatrix))
+      return(list(pcaResults=pcaResults, discordanceMatrix=GTDiscordanceMatrix))
     },
     USE.NAMES=TRUE,
     simplify=FALSE

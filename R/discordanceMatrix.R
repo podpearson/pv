@@ -15,6 +15,6 @@ discordanceMatrix <- function(
   discordance <- function(x, y) length(which(x!=y))
   vecDiscordance <- Vectorize(discordance)
   GTDiscordanceMatrix <- outer(GTList, GTList, vecDiscordance)
-  diag(GTDiscordanceMatrix) <- NA
+#  diag(GTDiscordanceMatrix) <- NA
   return(GTDiscordanceMatrix)
 }
