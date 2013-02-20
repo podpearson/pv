@@ -15,25 +15,37 @@ plotPCAandDiscordance <- function(
 #    "0.35_0_all" = list(sampleMissingnessThreshold = 0.35, variantMissingnessThreshold=0, samplesToRemove=NULL)
 #  ),
   parameterSets               = list(
+    # Slides "PCA plot Ð 46 samples with missingness < 5%", "Some samples seem identical" and "Clear separation between ÒidenticalÓ and Ònon-identicalÓ sample pairs"
     "0.05_93_all"    = list(sampleMissingnessThreshold = 0.05, variantMissingnessThreshold=93, samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
-    "0.05_93_noDups"    = list(sampleMissingnessThreshold = 0.05, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C"), shouldAnalyseDiscordance=TRUE),
+    # Slide "PCA plot Ð 40 unique samples with missingness < 5%"
     "0.05_93_noDups2"= list(sampleMissingnessThreshold = 0.05, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C"), shouldAnalyseDiscordance=FALSE),
+    # Slides "More duplicate samples identified", "Less clear separation between ÒidenticalÓ and Ònon-identicalÓ sample pairs", "Some SNPs have high missingness in these 58 samples" and "Discordance Ð all SNPs"
+    "0.20_93_all"    = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=93, samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
+    # Slides "PCA plot Ð 58 samples with missingness < 20% minus 6 duplicates"
     "0.20_93_noDups" = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C"), shouldAnalyseDiscordance=FALSE),
+    # Slides "PCA plot Ð 49 unique samples with missingness < 20%", "PCA plot Ð 49 unique samples with missingness < 20% - all SNPs"
     "0.20_93_noDups2" = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C"), shouldAnalyseDiscordance=FALSE),
+    # Slides "Pairwise discordance Òzero missingnessÓ SNPs" and "Discordance Ð Òzero missingnessÓ SNPs"
+    "0.20_0_all"     = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=0,  samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
+    # Slide "PCA plot Ð 49 unique samples with missingness < 20% - Ò0 missingnessÓ SNPs"
     "0.20_0_noDups2" = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=0, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C"), shouldAnalyseDiscordance=FALSE),
+    # Slides "PCA plot, 73 samples minus 9 duplicates, all SNPs", "Larger range of missingness between SNPs in these 73 samples"
     "0.65_93_noDups2" = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C"), shouldAnalyseDiscordance=FALSE),
+    # Slide "PCA plot, 73 samples minus 9 duplicates, Òmax 6 missingÓ SNPs"
     "0.65_6_noDups2" = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=6, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C"), shouldAnalyseDiscordance=FALSE),
+    # Slides "PCA plot, 73 samples minus 9 duplicates, Òmax 2 missingÓ SNPs" and "One more duplicate sample pair identified"
     "0.65_2_noDups2" = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=2, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C"), shouldAnalyseDiscordance=FALSE),
-    "0.65_2_noDups3" = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=2, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
+    # Slide "PCA plot, 77 samples, Òmax 2 missingÓ SNPs"
     "0.95_2_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=2, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE)
+    # The following are other runs that didn't end up in slide pack...
+#    "0.05_93_noDups"    = list(sampleMissingnessThreshold = 0.05, variantMissingnessThreshold=93, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C"), shouldAnalyseDiscordance=TRUE),
+#    "0.65_2_noDups3" = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=2, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_3_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=3, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_4_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=4, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_5_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=5, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_6_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=6, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_7_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=7, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE),
 #    "0.95_1_noDups3" = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=1, samplesToRemove=c("PH0190-C", "PH0313-C", "PH0319-C", "PH0312-C", "PH0318-C", "PJ0005-C", "PH0309-C", "PH0315-C", "PJ0006-C", "PN0065-Cx"), shouldAnalyseDiscordance=FALSE)
-#    "0.20_93_all"    = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=93, samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
-#    "0.20_0_all"     = list(sampleMissingnessThreshold = 0.20, variantMissingnessThreshold=0,  samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
 #    "0.65_6_all"     = list(sampleMissingnessThreshold = 0.65, variantMissingnessThreshold=6,  samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE),
 #    "0.95_93_all"    = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=93, samplesToRemove=NULL, shouldAnalyseDiscordance=FALSE),
 #    "0.95_10_all"    = list(sampleMissingnessThreshold = 0.95, variantMissingnessThreshold=93, samplesToRemove=NULL, shouldAnalyseDiscordance=TRUE)
