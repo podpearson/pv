@@ -12,7 +12,10 @@ sampleSummaries <- function(
   vcf                         = loadAndGenotypePvVcf(),
   variableNames               = c("missingness", "heterozgosity", "singletons", "depth", "missingnessVsDepth"),
   pdfFilestem                 = "analysis/sampleSummaries/pv_02",
-  pfContaminants              = c("PD0173-C", "PH0309-C", "PJ0002-Cx", "PN0094-C", "PN0095-C", "PN0096-C"),
+  sampleManifestRdaFilename   = "meta/pv_1.0_sampleManifest.rda",
+  magnusContaminantsFilename  = "analysis/magnus/Vivax contamination.txt",
+  jacobMissingnessFilename    = "analysis/jacob/sample_missingness.txt",
+#  pfContaminants              = c("PD0173-C", "PH0309-C", "PJ0002-Cx", "PN0094-C", "PN0095-C", "PN0096-C"),
   height                      = 6,
   width                       = 10
 ) {
@@ -20,6 +23,16 @@ sampleSummaries <- function(
   if(!file.exists(dirname(pdfFilestem))) {
     dir.create(dirname(pdfFilestem), recursive=TRUE)
   }
+  
+  cat("sampleSummaries: loading sample manifest\n")
+  load(sampleManifestRdaFilename)
+  magnusContaminants <- read.delim(magnusContaminantsFilename, as.is=TRUE, row.names=1)
+  jacobMissingness <- read.delim(jacobMissingnessFilename, as.is=TRUE, row.names=1)
+  sampleManifestExtended <- cbind(
+    sampleManifest,
+    magnusContaminants[row.names(sampleManifest),],
+    jacobMissingness[row.names(sampleManifest),]
+  )
 
   cat("sampleSummaries: preparing data\n")
   typableGT <- geno(vcf)[["GT"]]
@@ -43,31 +56,85 @@ sampleSummaries <- function(
       + theme_bw()
     )
     dev.off()
-    sampleShapes <- rep("uncontaminated", dim(typableGT)[2])
-    names(sampleShapes) <- dimnames(typableGT)[[2]]
-    sampleShapes[names(sampleShapes) %in% pfContaminants] <- "Pf contaminated"
-    pdf(paste(pdfFilestem, "missingnessBySample", "pdf", sep="."), height=height, width=width)
-    print(
-      qplot(
-        factor(names(sort(missingnessPerSample)), levels=names(sort(missingnessPerSample))),
-        sort(missingnessPerSample),
-        main="Missingness per sample",
-        xlab="Sample ID",
-        ylab="Missingness",
-        stat="identity",
-        colour=sampleShapes
-      )
-      + theme_bw()
-      + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, size=8))
-      + theme(axis.title.x = element_blank())
-      + theme(legend.position = c(0.9,0.4))
-      + scale_colour_manual(name="Pf contamination\nstatus", values=c("red", "black"))
-      + geom_hline(yintercept = 0.05, colour="blue")
-      + geom_hline(yintercept = 0.2, colour="green")
-      + geom_hline(yintercept = 0.65, colour="orange")
-      + geom_hline(yintercept = 0.95, colour="red")
+    sampleManifestExtended[["missingnessPerSample"]] <- missingnessPerSample[row.names(sampleManifestExtended)]
+    sampleManifestExtendedReordered <- sampleManifestExtended[order(sampleManifestExtended[["missingnessPerSample"]]), ]
+    sapply(
+      names(sampleManifestExtended),
+      function(sampleManifestColumnName) {
+        pdf(paste(pdfFilestem, "missingnessBySample", sampleManifestColumnName, "pdf", sep="."), height=height, width=width)
+        print(
+          qplot(
+            ox_code,
+            missingnessPerSample,
+#            factor(names(sort(missingnessPerSample)), levels=names(sort(missingnessPerSample))),
+#            sort(missingnessPerSample),
+            data=sampleManifestExtendedReordered,
+            main=paste("Missingness per sample - coloured by", sampleManifestColumnName),
+            xlab="Sample ID",
+            ylab="Missingness",
+            stat="identity",
+            colour=sampleManifestColumnName
+          )
+          + theme_bw()
+          + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, size=8))
+          + theme(axis.title.x = element_blank())
+          + theme(legend.position = c(0.9,0.4))
+#          + scale_colour_manual(name="Pf contamination\nstatus", values=c("red", "black"))
+          + geom_hline(yintercept = 0.05, colour="blue")
+          + geom_hline(yintercept = 0.2, colour="green")
+          + geom_hline(yintercept = 0.65, colour="orange")
+          + geom_hline(yintercept = 0.95, colour="red")
+        )
+        dev.off()
+        pdf(paste(pdfFilestem, "missingnessBySample", sampleManifestColumnName, "pdf", sep="."), height=height, width=width)
+        print(
+          qplot(
+            sampleManifestColumnName,
+            missingnessPerSample,
+            data=sampleManifestExtendedReordered,
+            main=paste("Missingness vs", sampleManifestColumnName),
+            ylab="Missingness",
+            colour=name,
+            shape=country
+          )
+          + theme_bw()
+          + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, size=8))
+          + theme(axis.title.x = element_blank())
+          + theme(legend.position = c(0.9,0.4))
+#          + scale_colour_manual(name="Pf contamination\nstatus", values=c("red", "black"))
+          + geom_hline(yintercept = 0.05, colour="blue")
+          + geom_hline(yintercept = 0.2, colour="green")
+          + geom_hline(yintercept = 0.65, colour="orange")
+          + geom_hline(yintercept = 0.95, colour="red")
+        )
+        dev.off()
+      }
     )
-    dev.off()
+#    sampleShapes <- rep("uncontaminated", dim(typableGT)[2])
+#    names(sampleShapes) <- dimnames(typableGT)[[2]]
+#    sampleShapes[names(sampleShapes) %in% pfContaminants] <- "Pf contaminated"
+#    pdf(paste(pdfFilestem, "missingnessBySample", "pdf", sep="."), height=height, width=width)
+#    print(
+#      qplot(
+#        factor(names(sort(missingnessPerSample)), levels=names(sort(missingnessPerSample))),
+#        sort(missingnessPerSample),
+#        main="Missingness per sample",
+#        xlab="Sample ID",
+#        ylab="Missingness",
+#        stat="identity",
+#        colour=sampleShapes
+#      )
+#      + theme_bw()
+#      + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, size=8))
+#      + theme(axis.title.x = element_blank())
+#      + theme(legend.position = c(0.9,0.4))
+#      + scale_colour_manual(name="Pf contamination\nstatus", values=c("red", "black"))
+#      + geom_hline(yintercept = 0.05, colour="blue")
+#      + geom_hline(yintercept = 0.2, colour="green")
+#      + geom_hline(yintercept = 0.65, colour="orange")
+#      + geom_hline(yintercept = 0.95, colour="red")
+#    )
+#    dev.off()
   }
 
   if("heterozgosity" %in% variableNames) {
