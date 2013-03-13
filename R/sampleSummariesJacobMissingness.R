@@ -8,6 +8,25 @@
 
 # vcf_01 <- sampleSummariesJacobMissingness(loadAndGenotypePvVcf("data/genotypes/out.pv_1.0/annotated.vcf.gz"), pdfFilestem = "analysis/sampleSummaries/pv_01")
 
+#with(sampleManifestExtendedReordered, table(batch_id, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(batch_id, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(details, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(details, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(comments, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(comments, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(source_1, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(source_1, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(source_2, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(source_2, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(study_description, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(study_description, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(study_description, country, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(Region, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(Region, missingness>0.05, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(sequencing_date, missingness>0.95, useNA="ifany"))
+#with(sampleManifestExtendedReordered, table(sequencing_date, missingness>0.05, useNA="ifany"))
+
+
 sampleSummariesJacobMissingness <- function(
   pdfFilestem                 = "analysis/sampleSummaries/pv_1.0",
   sampleManifestRdaFilename   = "meta/pv_1.0_sampleManifest.rda",
@@ -18,9 +37,14 @@ sampleSummariesJacobMissingness <- function(
   width                       = 10
 ) {
   require(ggplot2)
-  if(!file.exists(dirname(pdfFilestem))) {
-    dir.create(dirname(pdfFilestem), recursive=TRUE)
-  }
+  sapply(
+    plotsToCreate,
+    function(plotToCreate) {
+      if(!file.exists(file.path(pdfFilestem, plotToCreate))) {
+        dir.create(file.path(pdfFilestem, plotToCreate), recursive=TRUE)
+      }
+    }
+  )
   
   cat("sampleSummaries: loading sample manifest\n")
   load(sampleManifestRdaFilename)
@@ -90,7 +114,7 @@ sampleSummariesJacobMissingness <- function(
   sapply(
     names(sampleManifestExtended),
     function(sampleManifestColumnName) {
-      cat(sampleManifestColumnName)
+      cat(sampleManifestColumnName, "\n")
       if("missingnessBySample" %in% plotsToCreate) {
         pdf(file.path(pdfFilestem, "missingnessBySample", paste("missingnessBySample", sampleManifestColumnName, "pdf", sep=".")), height=height, width=width)
         print(
@@ -175,10 +199,6 @@ sampleSummariesJacobMissingness <- function(
                     ylab=sampleManifestColumnName2
                   )
                   + theme_bw()
-                  + geom_hline(yintercept = 0.05, colour="blue")
-                  + geom_hline(yintercept = 0.2, colour="green")
-                  + geom_hline(yintercept = 0.65, colour="orange")
-                  + geom_hline(yintercept = 0.95, colour="red")
                 )
                 dev.off()
               }
@@ -203,10 +223,6 @@ sampleSummariesJacobMissingness <- function(
                     log="xy"
                   )
                   + theme_bw()
-                  + geom_hline(yintercept = 0.05, colour="blue")
-                  + geom_hline(yintercept = 0.2, colour="green")
-                  + geom_hline(yintercept = 0.65, colour="orange")
-                  + geom_hline(yintercept = 0.95, colour="red")
                 )
                 dev.off()
               }
@@ -241,6 +257,7 @@ sampleSummariesJacobMissingness <- function(
       }
     }
   )
+  return(sampleManifestExtendedReordered)
 }
 
 
