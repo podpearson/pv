@@ -14,9 +14,15 @@ plotDiscordance <- function(
   sampleMissingnessThreshold  = 0.5,
   maxMissingnessPerVariant    = 0,
   vcfName                     = "1.0",
-  pdfFilestem                 = paste("analysis/discordance/", vcfName, sep=""),
-  shouldAttemptAllSamples     = TRUE
+  pdfFilestem                 = paste("analysis/", vcfName, "/discordance/", vcfName, sep=""),
+  shouldAttemptAllSamples     = FALSE,
+  shouldUsePGVlikeCalls       = TRUE
 ) {
+  require(gplots)
+  if(!file.exists(dirname(pdfFilestem))) {
+    dir.create(dirname(pdfFilestem), recursive=TRUE)
+  }
+
   load(sampleManifestRdaFilename)
   RefReads <- matrix(
     sapply(geno(vcf)[["AD"]], function(x) x[1]),
@@ -32,7 +38,40 @@ plotDiscordance <- function(
   majorityAlleleCalls[(RefReads+FirstAltReads) < minimumDepthToCallSNP] <- NA
   missingnessPerSample <- apply(majorityAlleleCalls, 2, function(x) length(which(is.na(x)))/length(x))
   if(shouldAttemptAllSamples) {
+    allDiscordances <- discordanceMatrix(majorityAlleleCalls)
+    allDiscordanceRatios <- discordanceMatrix(majorityAlleleCalls, returnValue="ratio")
+    allDiscordanceProportions <- discordanceMatrix(majorityAlleleCalls, returnValue="proportion")
+    allSharedGenotypes <-  allDiscordances/allDiscordanceProportions
+    pdf(paste(pdfFilestem, "allDiscordances.pdf", sep="."), height=12, width=12)
+    heatmap.2(allDiscordances, margins=c(10, 10))
+    dev.off()
+    pdf(paste(pdfFilestem, "allDiscordanceRatios.pdf", sep="."), height=12, width=12)
+    heatmap.2(allDiscordanceRatios, margins=c(10, 10))
+    dev.off()
+    pdf(paste(pdfFilestem, "allDiscordanceProportions.pdf", sep="."), height=12, width=12)
+    heatmap.2(allDiscordanceRatios, margins=c(10, 10))
+    dev.off()
+    allDiscordances["PH0190-C", ]
+    allDiscordanceRatios["PH0190-C", ]
+    allDiscordanceProportions["PH0190-C", ]
+    allSharedGenotypes["PH0190-C", ]
+    allDiscordances[names(which.max(missingnessPerSample)), ]
+    allDiscordanceRatios[names(which.max(missingnessPerSample)), ]
+    allDiscordanceProportions[names(which.max(missingnessPerSample)), ]
+    allSharedGenotypes[names(which.max(missingnessPerSample)), ]
+  }
+  if(shouldUsePGVlikeCalls) {
+    GT <- geno(vcf)[["GT"]]
+    GTmissingnessPerSample <- apply(GT, 2, function(x) length(which(is.na(x)))/length(x))
+    samplesToUse <- names(GTmissingnessPerSample[GTmissingnessPerSample<sampleMissingnessThreshold])
     browser()
+    PGVlikeDiscordanceProportions <- discordanceMatrix(GT, returnValue="proportion")
+    
+#    dimnames(PGVlikeDiscordanceProportions)[[1]] <- paste(samplesToUse, " (", sampleManifest[samplesToUse, "richard_donor_source_code"], ", ", sampleManifest[samplesToUse, "country"], ")", sep="")
+#    dimnames(MACDiscordanceMatrixExpandedSampleIDs)[[2]] <- paste(samplesToUse, " (", sampleManifest[samplesToUse, "richard_donor_source_code"], ", ", sampleManifest[samplesToUse, "country"], ")", sep="")
+    pdf(paste(pdfFilestem, "PGVlikeDiscordanceProportions.pdf", sep="."), height=12, width=12)
+    heatmap.2(PGVlikeDiscordanceProportions, margins=c(10, 10))
+    dev.off()
   }
   samplesToUse <- names(missingnessPerSample[missingnessPerSample<sampleMissingnessThreshold])
   missingnessPerVariant <- apply(majorityAlleleCalls[, samplesToUse], 1, function(x) length(which(is.na(x))))
@@ -43,7 +82,6 @@ plotDiscordance <- function(
   pdf("~/PvDiscordanceHeatmap.pdf", height=18, width=18)
   heatmap(MACDiscordanceMatrix)
   dev.off()
-  require(gplots)
   pdf("~/PvDiscordanceHeatmap2.pdf", height=12, width=12)
   heatmap.2(MACDiscordanceMatrix)
   dev.off()
