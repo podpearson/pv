@@ -62,10 +62,15 @@ plotDiscordance <- function(
   }
   if(shouldUsePGVlikeCalls) {
     GT <- geno(vcf)[["GT"]]
-    GTmissingnessPerSample <- apply(GT, 2, function(x) length(which(is.na(x)))/length(x))
+    GTint <- matrix(ifelse(GT=="0/0", 0, ifelse(GT=="1/1", 1, NA)), ncol=ncol(GT), dimnames=dimnames(GT))
+    GTmissingnessPerSample <- apply(GTint, 2, function(x) length(which(is.na(x)))/length(x))
     samplesToUse <- names(GTmissingnessPerSample[GTmissingnessPerSample<sampleMissingnessThreshold])
     browser()
-    PGVlikeDiscordanceProportions <- discordanceMatrix(GT, returnValue="proportion")
+    PGVlikeDiscordanceProportions <- discordanceMatrix(GTint[, samplesToUse], returnValue="proportion")
+    PGVlikeDiscordanceProportions2 <- PGVlikeDiscordanceProportions
+    diag(PGVlikeDiscordanceProportions2) <- NA
+    stem(PGVlikeDiscordanceProportions)
+    stem(PGVlikeDiscordanceProportions2)
     
 #    dimnames(PGVlikeDiscordanceProportions)[[1]] <- paste(samplesToUse, " (", sampleManifest[samplesToUse, "richard_donor_source_code"], ", ", sampleManifest[samplesToUse, "country"], ")", sep="")
 #    dimnames(MACDiscordanceMatrixExpandedSampleIDs)[[2]] <- paste(samplesToUse, " (", sampleManifest[samplesToUse, "richard_donor_source_code"], ", ", sampleManifest[samplesToUse, "country"], ")", sep="")

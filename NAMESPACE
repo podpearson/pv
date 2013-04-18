@@ -1,0 +1,4 @@
+import(methods)
+import(Biostrings)
+import(GenomicRanges)
+import(Rsamtools)
