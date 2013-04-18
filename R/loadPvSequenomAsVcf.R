@@ -13,7 +13,7 @@ loadPvSequenomAsVcf <- function(
   pvSequenomRdaFilename       = paste(pvSequenomVcfFilename, ".rda", sep=""),
   fastaFilename               = "data/genome/PvivaxGenomic_PlasmoDB-6.0.shortnames.fasta",
   reload                      = FALSE,
-  shouldSaveVcfFile           = TRUE, # Note that due to a bug in VariantAnnotation::.makeVcfGeno it is necessary to add "DUMMY" genotypes data
+  shouldSaveVcfFile           = TRUE, # Note that due to a bug in VariantAnnotation it is necessary to have more than one geno, and writeVcf will write strange VCF if only, e.g. GT is included (email sent to Bioconductor list 18/04/2013)
   shouldSaveRdaFile           = TRUE
 ) {
   if(reload || !file.exists(pvSequenomRdaFilename)) {
@@ -137,7 +137,6 @@ loadPvSequenomAsVcf <- function(
     genome <- rep("P. vivax reference, PlasmoDB V6.0", length(seqlevels(vcf)))
     names(genome) <- seqlevels(vcf)
     genome(vcf) <- genome
-    browser()
     vcf <- vcf[order(vcf)]
     if(shouldSaveRdaFile) {
       save(vcf, file=pvSequenomRdaFilename)
