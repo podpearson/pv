@@ -14,8 +14,10 @@ createSampleManifest <- function(
   solarisCountriesFilename    = "meta/pv_1.0_countries.txt",
   oxfordSamplesDBfilename     = "meta/Central_parasite_samples_21FEB2013__vivax_samples_21FEB2013.txt",
   irodsFilename               = "meta/pv_metadata.tab",
-  outputFilename              = "meta/pv_1.0_sampleManifest.txt",
-  outputRdaFilename           = sub("\\.txt", "\\.rda", outputFilename)
+  sampleManifestFilename      = "meta/pv_1.0_sampleManifest.txt",
+  sampleManifestRdaFilename   = sub("\\.txt", "\\.rda", sampleManifestFilename),
+  unseqSampleManifestFilename = "meta/pv_1.0_unsequencedSampleManifest.txt",
+  unseqSampleManifestRdaFilename = sub("\\.txt", "\\.rda", unseqSampleManifestFilename)
 ) {
   vrtrack <- read.delim(vrtrackFilename, as.is=TRUE, row.names=2)
   sangerLIMS <- read.delim(sangerLIMSfilename, as.is=TRUE, header=FALSE, row.names=1, col.names=c("ox_code", "sequencing_run_lane", "sequencing_date"), colClasses=c("character", "character", "Date"))
@@ -60,10 +62,9 @@ createSampleManifest <- function(
   print(qplot(Human...., Quantity..ng., data=unsequencedSampleManifest, log="y", xlab="% human", ylab="Quantity", colour=Biosample.Location) + theme_bw() + geom_hline(yintercept = 200, colour="blue") + geom_vline(xintercept = 80, colour="green"))
   dev.off()
   with(unsequencedSampleManifest, table(Human....>80, Quantity..ng.>200))
-  save(sampleManifest, file=outputRdaFilename)
-  write.table(sampleManifest, file=outputFilename, quote=FALSE, sep="\t", row.names=FALSE)
+  save(unsequencedSampleManifest, file=unseqSampleManifestRdaFilename)
+  write.table(unsequencedSampleManifest, file=unseqSampleManifestFilename, quote=FALSE, sep="\t", row.names=FALSE)
 
-  
   table(samtrakLabInfo[["Project.Status"]], useNA="ifany")
   table(samtrakLabInfo[["Project.Status"]], row.names(samtrakLabInfo) %in% row.names(vrtrack), useNA="ifany")
     
@@ -79,7 +80,21 @@ createSampleManifest <- function(
   sampleManifest[["numberOfNonHumanReads"]] <- irodsNonHumanPhix[row.names(sampleManifest), "numberOfReads"]
   sampleManifest[["proportionHumanReads"]] <- sampleManifest[["numberOfHumanReads"]]/(sampleManifest[["numberOfHumanReads"]]+sampleManifest[["numberOfNonHumanReads"]])
   sampleManifest[["richard_donor_source_code"]] <- sub("_[A-Za-z].*$", "", sampleManifest[["source_code"]])
-  save(sampleManifest, file=outputRdaFilename)
-  write.table(sampleManifest, file=outputFilename, quote=FALSE, sep="\t", row.names=FALSE)
+  sampleManifest[["numberOfAnnotatedDuplicates"]] <- table(sampleManifest[["richard_donor_source_code"]])[sampleManifest[["richard_donor_source_code"]]]
+  sampleManifest[["annotatedDuplicateIDs"]] <- sapply(
+    rownames(sampleManifest),
+    function(sampleID) {
+      paste(
+        setdiff(
+          rownames(subset(sampleManifest, richard_donor_source_code==sampleManifest[sampleID, "richard_donor_source_code"])),
+          sampleID
+        ),
+        collapse=","
+      )
+    }
+  )
+  
+  save(sampleManifest, file=sampleManifestRdaFilename)
+  write.table(sampleManifest, file=sampleManifestFilename, quote=FALSE, sep="\t", row.names=FALSE)
   return(sampleManifest)
 }
