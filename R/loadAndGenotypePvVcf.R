@@ -52,7 +52,10 @@ loadAndGenotypePvVcf <- function(
             DataFrame(Number=1, Type="Float", Description="Heterozygosity", row.names="heterozygosity"),
             DataFrame(Number=0, Type="Flag", Description="Singleton variant (only 1 alt allele and 0 hets)", row.names="singleton")
           ),
-          FORMAT = geno(exptData(typableVcf)[["header"]])
+          FORMAT = rbind(
+            geno(exptData(typableVcf)[["header"]]),
+            DataFrame(Number="1", Type="Float", Description="MAF", row.names="MAF")
+          )
         )
       )
     )

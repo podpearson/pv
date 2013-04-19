@@ -14,6 +14,8 @@ createSampleManifest <- function(
   solarisCountriesFilename    = "meta/pv_1.0_countries.txt",
   oxfordSamplesDBfilename     = "meta/Central_parasite_samples_21FEB2013__vivax_samples_21FEB2013.txt",
   irodsFilename               = "meta/pv_metadata.tab",
+  pvSequenomFilename          = "data/sequenom/vivax_data_10APR2013.txt",
+  columnsToLoadFromSequenom   = c("study_code", "sample_id", "source_code"),
   sampleManifestFilename      = "meta/pv_1.0_sampleManifest.txt",
   sampleManifestRdaFilename   = sub("\\.txt", "\\.rda", sampleManifestFilename),
   unseqSampleManifestFilename = "meta/pv_1.0_unsequencedSampleManifest.txt",
@@ -37,6 +39,12 @@ createSampleManifest <- function(
   oxfordSamplesDB <- read.delim(oxfordSamplesDBfilename, as.is=TRUE, row.names="sample_code")
   sangerLIMS[["sequencing_run"]] <- sub("^([0-9]+)_.*$", "\\1", sangerLIMS[["sequencing_run_lane"]])
   sangerLIMS[["sequencing_lane"]] <- sub("^[0-9]+_([0-9]+)_.*$", "\\1", sangerLIMS[["sequencing_run_lane"]])
+  pvSequenom <- read.table(pvSequenomFilename, header=TRUE, sep="\t", as.is=TRUE)
+  pvSequenomPvOnly <- subset(pvSequenom, !(study_code %in% c("WT", "WA")))
+  pvSequenomPvOnlyOneVariant <- subset(pvSequenomPvOnly, sequence_code==pvSequenomPvOnly[1, "sequence_code"])
+  row.names(pvSequenomPvOnlyOneVariant) <- pvSequenomPvOnlyOneVariant[["sample_code"]]
+  pvSequenomSampleColumns <- pvSequenomPvOnlyOneVariant[, columnsToLoadFromSequenom]
+  names(pvSequenomSampleColumns) <- paste("SQ", columnsToLoadFromSequenom, sep="_")
  
   setdiff(row.names(vrtrack), row.names(sangerLIMS))
   setdiff(row.names(vrtrack), row.names(samtrakLabInfo))
@@ -50,6 +58,8 @@ createSampleManifest <- function(
   setdiff(row.names(vrtrack), row.names(irodsNonHumanPhix))
   setdiff(row.names(irodsHuman), row.names(vrtrack))
   setdiff(row.names(irodsNonHumanPhix), row.names(vrtrack))
+  setdiff(row.names(vrtrack), row.names(pvSequenomPvOnlyOneVariant))
+  setdiff(row.names(pvSequenomPvOnlyOneVariant), row.names(vrtrack))
   table(row.names(irodsHuman) %in% row.names(irodsNonHumanPhix))
   table(row.names(irodsNonHumanPhix) %in% row.names(irodsHuman))
   setdiff(row.names(samtrakLabInfo), row.names(oxfordSamplesDB))
@@ -62,18 +72,24 @@ createSampleManifest <- function(
   print(qplot(Human...., Quantity..ng., data=unsequencedSampleManifest, log="y", xlab="% human", ylab="Quantity", colour=Biosample.Location) + theme_bw() + geom_hline(yintercept = 200, colour="blue") + geom_vline(xintercept = 80, colour="green"))
   dev.off()
   with(unsequencedSampleManifest, table(Human....>80, Quantity..ng.>200))
+  unsequencedSampleManifest[["hasSequenomData"]] <- row.names(unsequencedSampleManifest) %in% row.names(pvSequenomPvOnlyOneVariant)
   save(unsequencedSampleManifest, file=unseqSampleManifestRdaFilename)
   write.table(unsequencedSampleManifest, file=unseqSampleManifestFilename, quote=FALSE, sep="\t", row.names=FALSE)
 
+  setdiff(row.names(unsequencedSampleManifest), row.names(pvSequenomPvOnlyOneVariant))
+  setdiff(row.names(pvSequenomPvOnlyOneVariant), row.names(unsequencedSampleManifest))
+  intersect(row.names(unsequencedSampleManifest), row.names(pvSequenomPvOnlyOneVariant))
+  
   table(samtrakLabInfo[["Project.Status"]], useNA="ifany")
   table(samtrakLabInfo[["Project.Status"]], row.names(samtrakLabInfo) %in% row.names(vrtrack), useNA="ifany")
-    
+  
   sampleManifest <- cbind(
     solarisCountriesPv[row.names(vrtrack), "ox_code", drop=FALSE],
     oxfordSamplesDB[row.names(vrtrack), ],
     solarisCountriesPv[row.names(vrtrack), -(which(names(solarisCountriesPv) == "ox_code"))],
     samtrakLabInfo[row.names(vrtrack), ],
     sangerLIMS[row.names(vrtrack), ],
+    pvSequenomSampleColumns[row.names(vrtrack), ],
     vrtrack
   )
   sampleManifest[["numberOfHumanReads"]] <- irodsHuman[row.names(sampleManifest), "numberOfReads"]
@@ -93,6 +109,13 @@ createSampleManifest <- function(
       )
     }
   )
+  
+  subset(sampleManifest, numberOfAnnotatedDuplicates>1, c("numberOfAnnotatedDuplicates", "annotatedDuplicateIDs"))
+  
+  with(sampleManifest, table(study_code, SQ_study_code, useNA="ifany"))
+  with(sampleManifest, table(study_code==SQ_study_code, useNA="ifany"))
+  with(sampleManifest, table(sample_id == SQ_sample_id, useNA="ifany"))
+  with(sampleManifest, table(source_code==SQ_source_code, useNA="ifany"))
   
   save(sampleManifest, file=sampleManifestRdaFilename)
   write.table(sampleManifest, file=sampleManifestFilename, quote=FALSE, sep="\t", row.names=FALSE)
