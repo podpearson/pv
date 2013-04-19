@@ -11,6 +11,7 @@ loadAndGenotypePvVcf <- function(
   originalVcfFilename         = "data/genotypes/pv_02.vcf.gz",
   typableVcfFilename          = sub("\\.vcf\\.gz", "\\.typable\\.vcf", originalVcfFilename),
   typableRdaFilename          = paste(typableVcfFilename, "rda", sep="."),
+  typableExtraInfoVcfFilename = sub("\\.vcf\\.gz", "\\.typable\\.extraInfo\\.vcf", originalVcfFilename),
   typableExtraInfoRdaFilename = sub("\\.vcf\\.gz", "\\.typable\\.extraInfo\\.vcf\\.rda", originalVcfFilename),
   reload                      = FALSE
 ) {
@@ -56,12 +57,12 @@ loadAndGenotypePvVcf <- function(
       )
     )
     typableVcfWithAAFandHet <- VCF(
-      rowData = rowData(typableVcf)[values(info(typableVcf))[["TYP"]]==TRUE],
+      rowData = rowData(typableVcf)[info(typableVcf)[["TYP"]]==TRUE],
       colData = colData(typableVcf),
       exptData = newExptData,
-      fixed = values(fixed(typableVcf))[values(info(typableVcf))[["TYP"]]==TRUE, -1],
+      fixed = fixed(typableVcf)[info(typableVcf)[["TYP"]]==TRUE, ],
       info = cbind(
-        values(info(typableVcf))[values(info(typableVcf))[["TYP"]]==TRUE, -1],
+        info(typableVcf)[info(typableVcf)[["TYP"]]==TRUE, ],
         DataFrame(
           HRAC = rowSums(typableHomRefGT),
           HAAC = rowSums(typableHomAltGT),
@@ -86,6 +87,7 @@ loadAndGenotypePvVcf <- function(
     )
     geno(typableVcfWithAAFandHet)[["MAF"]] <- pmin(RefReads/(RefReads+FirstAltReads), FirstAltReads/(RefReads+FirstAltReads))
     save(typableVcfWithAAFandHet, file=typableExtraInfoRdaFilename)
+    writeVcf(typableVcfWithAAFandHet, typableExtraInfoVcfFilename, index=TRUE)
   }
   return(typableVcfWithAAFandHet)
 }
