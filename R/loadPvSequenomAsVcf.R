@@ -113,7 +113,7 @@ loadPvSequenomAsVcf <- function(
               DataFrame(Number = "1", Type = "Integer", Description="chrmosome position", row.names="coord_valid"),
               DataFrame(Number = "1", Type = "String", Description="gene name", row.names="gene_symbol"),
               DataFrame(Number = "1", Type = "String", Description="reference allele", row.names="reference_allele"),
-              DataFrame(Number = "1", Type = "String", Description="alternate allele", row.names="alternative_allele"),
+#              DataFrame(Number = "1", Type = "String", Description="alternate allele", row.names="alternative_allele"),
               DataFrame(Number = "1", Type = "String", Description="SNP alleles single letter code", row.names="single_letter_code")
             )
           )
@@ -126,7 +126,8 @@ loadPvSequenomAsVcf <- function(
         FILTER = rep("PASS", dim(pvSequenomRefs)[1])
       ),
       info = DataFrame(
-        pvSingleSample[, c("chr_valid", "coord_valid", "gene_symbol", "reference_allele", "alternative_allele", "single_letter_code")]
+        pvSingleSample[, c("chr_valid", "coord_valid", "gene_symbol", "reference_allele", "single_letter_code")]
+#        pvSingleSample[, c("chr_valid", "coord_valid", "gene_symbol", "reference_allele", "alternative_allele", "single_letter_code")]
       ),
       geno     = SimpleList(
         GT = GT,

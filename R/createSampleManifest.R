@@ -15,9 +15,12 @@ createSampleManifest <- function(
   oxfordSamplesDBfilename     = "meta/Central_parasite_samples_21FEB2013__vivax_samples_21FEB2013.txt",
   irodsFilename               = "meta/pv_metadata.tab",
   pvSequenomFilename          = "data/sequenom/vivax_data_10APR2013.txt",
+  jacobSamplesFilename        = "data/jacob/PVivax-datasets/metadata/samplesMeta.tab",
   columnsToLoadFromSequenom   = c("study_code", "sample_id", "source_code"),
   sampleManifestFilename      = "meta/pv_1.0_sampleManifest.txt",
   sampleManifestRdaFilename   = sub("\\.txt", "\\.rda", sampleManifestFilename),
+  sampleManifestPostAnalysisFilename      = "meta/pv_1.0_sampleManifestPostAnalysis.txt",
+  sampleManifestPostAnalysisRdaFilename   = sub("\\.txt", "\\.rda", sampleManifestPostAnalysisFilename),
   unseqSampleManifestFilename = "meta/pv_1.0_unsequencedSampleManifest.txt",
   unseqSampleManifestRdaFilename = sub("\\.txt", "\\.rda", unseqSampleManifestFilename)
 ) {
@@ -109,6 +112,15 @@ createSampleManifest <- function(
       )
     }
   )
+  sampleManifest[["sampleIDforPlots"]] <- paste(
+    rownames(sampleManifest),
+    " (",
+    sampleManifest[["richard_donor_source_code"]],
+    ", ",
+    sampleManifest[["country"]],
+    ")",
+    sep=""
+  )
   
   subset(sampleManifest, numberOfAnnotatedDuplicates>1, c("numberOfAnnotatedDuplicates", "annotatedDuplicateIDs"))
   
@@ -119,5 +131,10 @@ createSampleManifest <- function(
   
   save(sampleManifest, file=sampleManifestRdaFilename)
   write.table(sampleManifest, file=sampleManifestFilename, quote=FALSE, sep="\t", row.names=FALSE)
+  jacobSamples = read.delim(jacobSamplesFilename, as.is=TRUE, row.names=1)
+  sampleManifest[["SnpStringent"]] <- jacobSamples[row.names(sampleManifest), "SnpStringent"]
+  sampleManifest[["SampleStringent"]] <- jacobSamples[row.names(sampleManifest), "SampleStringent"]
+  save(sampleManifest, file=sampleManifestPostAnalysisRdaFilename)
+  write.table(sampleManifest, file=sampleManifestPostAnalysisFilename, quote=FALSE, sep="\t", row.names=FALSE)
   return(sampleManifest)
 }
